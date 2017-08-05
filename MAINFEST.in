@@ -1,0 +1,4 @@
+graft pyhiscore/templates
+graft pyhiscore/static
+include pyhiscore/mainschema.sql
+include pyhiscore/gameschema.sql

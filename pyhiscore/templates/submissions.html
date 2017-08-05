@@ -1,0 +1,31 @@
+<html>
+<title>Score submissions</title>
+
+<style type="text/css">
+table{
+    border-collapse: collapse;
+}
+td, th, table{
+    border: 1px solid black;
+    padding: 5px;
+}
+</style>
+
+<table>
+    <tr>
+        <th>Sub ID</th>
+        <th>Time</th>
+        <th>Badge ID</th>
+        <th>Name</th>
+        <th>Game</th>
+        <th>Score</th>
+        <th>Staff Name</th>
+    </tr>
+    {% for submit in submissions %}
+        <tr>
+        {% for item in submit %}
+            <td>{{ item }}</td>
+        {% endfor %}
+        </tr>
+    {% endfor %}
+</table>

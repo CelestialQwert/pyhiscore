@@ -1,0 +1,77 @@
+<html>
+<title>Score submission</title>
+
+<style type="text/css">
+form {display: table;}
+.formrow{display: table-row;}
+label{
+  display: table-cell;
+  margin: 5px;
+  font-weight:bold;
+}
+input{display: table-cell;margin: 5px;}
+select{display: table-cell;margin: 5px;}
+
+.error {
+  display: table-cell;
+  color: red;
+}
+
+.message {
+  display: table-cell;
+  color: blue;
+}
+</style>
+
+<script type=text/javascript src='{{ url_for('static', filename='jquery.js') }}'></script>
+
+<script>
+$(document).ready(function(){
+  var click=0;
+  $("#badgeid").focusout(function(){
+    $.ajax({
+      url: 'getname',
+      data: {'badgeid': $('#badgeid').val()},
+      type: 'POST',
+      timeout: 2000,
+      success: function(name){
+        if (name){
+          $("#name").val(name);
+          $("#message_name").text('Badge found!');
+        } else {
+          $("#name").val('');
+          $("#message_name").text('Badge not found, enter name.');
+        }
+      },
+      error: function(){console.log('shit broke!');}
+    });
+  });
+  $(".formrow").focusout(function(){
+    $(".error").text('');
+  });
+});
+</script>
+
+<form action="/submit" method="POST">
+{% for item in [form.badgeid, form.name, form.game, form.score, form.staffname] %}
+  <div class="formrow">{{ item.label }} {{ item }} <div class="message" id="message_{{ item.id }}"></div>
+  {% if item.errors %}
+    {%for error in item.errors %}
+      <div class="error">{{ error }}</div>
+    {% endfor %}
+  {% endif %}
+  </div>
+{% endfor %}
+  
+  <div class="formrow">
+    <input type="submit" value="Submit">
+  </div>
+</form>
+
+<div class="lol">
+{% with message = get_flashed_messages() %}
+  {% if message %}
+    {{message[0]}}
+  {% endif %}
+{% endwith %}
+</div>

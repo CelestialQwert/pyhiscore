@@ -1,0 +1,58 @@
+<html>
+<title>Hi score tracker</title>
+
+<style type="text/css">
+table{
+    border-collapse: collapse;
+}
+td, th, table{
+    border: 1px solid black;
+    padding: 5px;
+}
+div{
+	float:left;
+	padding: 10px;
+}
+.scoreboard{
+	width: 75px;
+}
+</style>
+
+<table>
+    <tr>
+	    <th>Name</th>
+	    {% for gamedata in data %}
+	        <th class="scoreboard">{{ gamedata[0] }}</th>
+	    {% endfor %}
+	    <th>Total</th>
+    </tr>
+    {% for game in scoreboard %}
+    	<tr>
+    	{% for item in game %}
+            <td>{% if item %}{{ item }}{% endif %}</td>
+        {% endfor %}
+        </tr>
+    {% endfor %}
+</table>
+
+{% for gamedata in data %}
+	<div>
+		<h3>{{ gamedata[0] }}</h3>
+		<table>
+		    <tr>
+		        <th>Rank</th>
+		        <th>Name</th>
+		        <th>Score</th>
+		        <th>RP</th>
+		    </tr>
+		    {% for score in gamedata[1] %}
+		        <tr>
+		        {% for item in score %}
+		            <td>{{ item }}</td>
+		        {% endfor %}
+		        </tr>
+		    {% endfor %}
+		</table>
+		<br />
+	</div>
+{% endfor %}
