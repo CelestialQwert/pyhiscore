@@ -9,6 +9,18 @@ create table submissions (
   staffname text not null
 );
 
+drop table if exists removed;
+create table removed (
+  subid integer primary key,
+  subtime datetime,
+  badgeid integer not null,
+  name text not null,
+  game text not null,
+  score integer not null,
+  staffname text not null,
+  removetime datetime default current_timestamp
+);
+
 drop view if exists hiscore;
 create view hiscore as 
     select subid, subtime, badgeid, 

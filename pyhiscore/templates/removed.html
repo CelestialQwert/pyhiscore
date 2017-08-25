@@ -10,14 +10,7 @@ td, th, table{
     padding: 5pt;
 }
 </style>
-<body>
 
-{% with message = get_flashed_messages() %}
-  {% if message %}
-    {{message[0]}}<br><br>
-  {% endif %}
-{% endwith %}
-<form action="/submissions" method="POST">
 <table>
     <tr>
         <th>Sub ID</th>
@@ -27,16 +20,13 @@ td, th, table{
         <th>Game</th>
         <th>Score</th>
         <th>Staff Name</th>
-        <th>Delete?</th>
+        <th>Removed Time</th>
     </tr>
-    {% for submit in submissions %}
+    {% for submit in removed %}
         <tr>
         {% for item in submit %}
             <td>{{ item }}</td>
         {% endfor %}
-        <td><input type="checkbox" name="del{{ submit[0] }}" id="del{{ submit[0] }}">
         </tr>
     {% endfor %}
-
-</table><br>
-<input type="submit" value="Delete Selected"></form></body></html>
+</table>

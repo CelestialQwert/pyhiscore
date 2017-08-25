@@ -62,7 +62,7 @@ def populate_db():
     gameNames = [g[1] for g in app.config['GAMES']]
 
     db = get_db()
-    for i in range(200):
+    for i in range(25):
         badgeid = randint(1,21)
         name = names[badgeid-1]
         game = gameNames[randint(0,4)]
@@ -120,11 +120,32 @@ def getname():
     else:
         return ''
 
-@app.route('/submissions')
+@app.route('/submissions',methods=['GET','POST'])
 def view_submissions():
+    if request.method == 'POST':
+        print(request.form)
+        flash('Scores deleted!')
+        db = get_db()
+        for key in request.form.keys():
+            print(key)
+            subid = int(key[3:])
+            data = list(db.execute('SELECT * FROM submissions WHERE subid=?',(subid,)).fetchone())
+            print(data[1:])
+            db.execute('INSERT INTO removed (subtime,badgeid, name, game, score, staffname)'+
+                'VALUES (?,?,?,?,?,?)',data[1:])
+            db.execute('DELETE FROM submissions WHERE subid=?',(subid,))
+            db.commit()
+        return redirect(url_for('view_submissions'))
+    else:
+        db = get_db()
+        submissions = db.execute('SELECT * FROM submissions ORDER BY subid')
+        return render_template('submissions.html',submissions=submissions)
+
+@app.route('/removed')
+def view_removed():
     db = get_db()
-    submissions = db.execute('SELECT * FROM submissions ORDER BY subid')
-    return render_template('submissions.html',submissions=submissions)
+    removed = db.execute('SELECT * FROM removed ORDER BY subid')
+    return render_template('removed.html',removed=removed)
 
 @app.route('/hiscores')
 def show_hiscores():
