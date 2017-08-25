@@ -6,6 +6,8 @@ from flask import Flask, request, session, g, redirect, \
 from wtforms import Form, StringField, IntegerField, \
     SelectField, validators
 from random import randint
+from shutil import copy
+from time import strftime
 
 app = Flask(__name__) # create the application instance :)
 
@@ -45,6 +47,7 @@ def get_db():
     return g.sqlite_db
 
 def init_db():
+    copy(app.config['DATABASE'],app.config['DATABASE'][:-3]+strftime('-%Y%m%d-%H%M%S')+'.db')
     db = get_db()
     with open(os.path.join(app.root_path, 'baseschema.sql'),'r') as schema:
         db.executescript(schema.read())
@@ -55,7 +58,6 @@ def init_db():
     with open(os.path.join(app.root_path, 'scoreboardschema.sql'),'r') as schema:
         db.executescript(schema.read())
     db.commit()
-    populate_db()
 
 def populate_db():
     names = ['Arlene','Bret','Cindy','Don','Emily','Franklin','Gert','Harvey','Irma','Jose','Katia','Lee','Maria','Nate','Ophelia','Philippe','Rina','Sean','Tammy','Vince','Whitney']
@@ -77,8 +79,17 @@ def populate_db():
 def initdb_command():
     """Initializes the database."""
     init_db()
+    populate_db()
     print('Initialized the database.')
     return('Initialized the database.')
+
+@app.cli.command('wipedb')
+@app.route('/wipedb-9000')
+def wipedb_command():
+    """Initializes the database."""
+    init_db()
+    print('Wiped the database.')
+    return('Wiped the database.')
 
 @app.teardown_appcontext
 def close_db(error):
