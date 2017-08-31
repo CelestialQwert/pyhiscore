@@ -1,30 +1,61 @@
-<html>
+<html><head>
 <title>Hi score tracker</title>
+<script type=text/javascript src='{{ url_for('static', filename='jquery.js') }}'></script>
+<script>
+function updateStatusThisIsDumb(){
+    $.ajax({
+        url: 'update',
+        timeout: 2000,
+        success: function(rawdata){
+        	if (rawdata == 'update'){location.reload(true);}
+        }
+    });
+};
+
+function updateStatus(){location.reload(true);}
+
+$(document).ready(function(){
+    setInterval(updateStatusThisIsDumb,5000);
+});
+</script>
 
 <style type="text/css">
-table{
-    border-collapse: collapse;
+body{ background-color: black; color:white; font-family: sans-serif;}
+@font-face{
+	font-family: bricks;
+	src: url({{ url_for('static', filename='PrStart.ttf') }});
 }
-td, th, table{
-    border: 1px solid black;
-    padding: 5px;
-}
-div{
-	float:left;
-	padding: 10px;
-}
-.scoreboard{
-	width: 75px;
-}
-</style>
+h2 {font-family:bricks; font-size: 28px;}
 
-<table>
+td, th, table{
+    border: 1px solid #0000c0;
+    padding: 3px;
+    vertical-align: bottom;
+}
+table{
+    font-size: 9pt;
+    padding: 1px;
+}
+
+.title{float:left; width: 67%; font-size: 24pt; font-family:bricks; text-align:center;}
+.game{width: 21%; float:left;}
+.leaderboard{float:right; width:37%;}
+.scoreboard{width: 14.5%;}
+.gametitle{border: 0px; font-family:bricks;height:37px; text-align: center;width:90%;font-size: 11pt;}
+.gametable{width: 95%;}
+.leadertable{width: 99%;}
+.footer{font-family:bricks;font-size: 12pt;text-align: center}
+</style></head>
+<body>
+
+<div class="leaderboard"><h2 align="center">KING OF CADES<br>LEADERBOARD</h2>
+<table class="leadertable">
     <tr>
 	    <th>Name</th>
 	    {% for gamedata in data %}
 	        <th class="scoreboard">{{ gamedata[0] }}</th>
 	    {% endfor %}
-	    <th>Total</th>
+	    <th width="25px">Total</th>
     </tr>
     {% for game in scoreboard %}
     	<tr>
@@ -33,12 +64,16 @@ div{
         {% endfor %}
         </tr>
     {% endfor %}
+    {% for i in range(numleaderboard+1,16) %}
+		<tr><td>--</td><td></td><td></td><td></td><td></td><td></td><td>0</td></tr>
+    {% endfor %}
 </table>
+<p class="footer">SUBMIT YOUR SCORES TO THE ARCADE HELP DESK!<br><br>SCORING ENDS 11:59 PM SATURDAY</p></div>
 
 {% for gamedata in data %}
-	<div>
-		<h3>{{ gamedata[0] }}</h3>
-		<table>
+	<div class="game">
+		<table class="gametitle"><tr><td class="gametitle">{{ gamedata[0].upper() }}</td></tr></table>
+		<table class="gametable">
 		    <tr>
 		        <th>Rank</th>
 		        <th>Name</th>
@@ -52,7 +87,14 @@ div{
 		        {% endfor %}
 		        </tr>
 		    {% endfor %}
+		    {% for i in range(gamedata[2]+1,11) %}
+		    <tr><td>{{ i }}</td><td>--</td><td>--</td><td>--</td></tr>
+		    {% endfor %}
 		</table>
 		<br />
 	</div>
 {% endfor %}
+
+
+
+</body></html>

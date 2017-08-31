@@ -11,6 +11,7 @@ td, th, table{
 }
 </style>
 <body>
+<a href="submit">Back to submit form</a><br><br>
 
 {% with message = get_flashed_messages() %}
   {% if message %}
@@ -39,4 +40,5 @@ td, th, table{
     {% endfor %}
 
 </table><br>
-<input type="submit" value="Delete Selected"></form></body></html>
+<input type="submit" value="Delete Selected"></form>
+<br><br><a href="submit">Back to submit form</a></body></html>

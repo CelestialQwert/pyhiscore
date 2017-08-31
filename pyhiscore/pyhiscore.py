@@ -11,7 +11,6 @@ from time import strftime
 
 app = Flask(__name__) # create the application instance :)
 
-# Load default config and override config from an environment variable
 app.config.update(dict(
     DATABASE=os.path.join(app.root_path, 'hiscores.db'),
     SECRET_KEY='Sunny is a very nice kitty.',
@@ -71,11 +70,11 @@ def populate_db():
         score = int(randint(20,500)*(1+badgeid*.1))*100
         db.execute('INSERT INTO submissions (badgeid, name, game, score, staffname) VALUES (?,?,?,?,?)',
             [badgeid, name, game, score, 'BOT'])
-        db.execute('INSERT OR IGNORE INTO players (badgeid, name) VALUES (?,?)', [badgeid,name])
+        db.execute('INSERT INTO players (badgeid, name) VALUES (?,?)', [badgeid,name])
     db.commit()
 
 @app.cli.command('initdb')
-@app.route('/initdb-9000')
+#@app.route('/initdb-9000')
 def initdb_command():
     """Initializes the database."""
     init_db()
@@ -84,7 +83,7 @@ def initdb_command():
     return('Initialized the database.')
 
 @app.cli.command('wipedb')
-@app.route('/wipedb-9000')
+#@app.route('/wipedb-9000')
 def wipedb_command():
     """Initializes the database."""
     init_db()
@@ -113,9 +112,12 @@ def submit():
         db = get_db()
         db.execute('INSERT INTO submissions (badgeid, name, game, score, staffname) VALUES (?,?,?,?,?)',
             [badgeid, name, game, score, staffname])
-        db.execute('INSERT OR IGNORE INTO players (badgeid, name) VALUES (?,?)', [badgeid,name])
+        db.execute('DELETE FROM players WHERE badgeid = ?', [badgeid])
+        db.execute('INSERT INTO players (badgeid, name) VALUES (?,?)', [badgeid,name])
         db.commit()
         flash('Submission successful!')
+        global updated
+        updated = True
         return redirect(url_for('submit'))
     else:
         return render_template('submission_form.html',form=submitForm)
@@ -146,6 +148,7 @@ def view_submissions():
                 'VALUES (?,?,?,?,?,?)',data[1:])
             db.execute('DELETE FROM submissions WHERE subid=?',(subid,))
             db.commit()
+            updated = True
         return redirect(url_for('view_submissions'))
     else:
         db = get_db()
@@ -158,18 +161,34 @@ def view_removed():
     removed = db.execute('SELECT * FROM removed ORDER BY subid')
     return render_template('removed.html',removed=removed)
 
+@app.route('/update')
+def check_update():
+    global updated
+    if updated:
+        updated = False
+        return 'update'
+    else:
+        return 'nope'
+
 @app.route('/hiscores')
 def show_hiscores():
     db = get_db()
     views = [g[0] for g in app.config['GAMES']]
     gameTitles = [g[1] for g in app.config['GAMES']]
     hiScoreData = []
+    numentries = []
     for view in views:
-        hiScoreData.append(db.execute("SELECT rank,name,score,rp FROM {} LIMIT 10".format(view)))
-    gameData = zip(gameTitles,hiScoreData)
+        oneGameData = db.execute("SELECT rank,name,score,rp FROM {} LIMIT 10".format(view)).fetchall()
+        hiScoreData.append(oneGameData)
+        numentries.append(db.execute("SELECT COUNT(*) FROM {} LIMIT 10".format(view)).fetchone()[0])
+    gameData = zip(gameTitles,hiScoreData,numentries)
     gameList = ','.join(views)
     scoreboard = db.execute("SELECT name,{},total FROM scoreboard LIMIT 15".format(gameList))
-    return render_template('hiscores.html',data=list(gameData), scoreboard=scoreboard)
+    #scoreboard = db.execute("SELECT name,total FROM scoreboard LIMIT 15")
+    numleaderboard = db.execute("SELECT COUNT(*) FROM scoreboard LIMIT 15").fetchone()[0]
+    return render_template('hiscores.html',data=list(gameData), scoreboard=scoreboard, numleaderboard=numleaderboard)
 
 if __name__ == '__main__':
-    app.run(port=80)
+    global updated
+    updated=False
+    app.run(host= '0.0.0.0')
