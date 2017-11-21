@@ -1,0 +1,3 @@
+recursive-include pyhiscore/templates *.html
+recursive-include pyhiscore/static *.js *.css *.ttf
+recursive-include pyhiscore *.sql

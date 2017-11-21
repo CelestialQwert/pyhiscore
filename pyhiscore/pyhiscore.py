@@ -75,7 +75,7 @@ def populate_db():
         score = int(randint(20,500)*(1+badgeid*.1))*100
         db.execute('INSERT INTO submissions (badgeid, name, game, score, staffname) VALUES (?,?,?,?,?)',
             [badgeid, name, game, score, 'BOT'])
-        print(badgeid, name)
+        #print(badgeid, name)
         db.execute('DELETE FROM players WHERE badgeid = ?', [badgeid])
         db.execute('INSERT INTO players (badgeid, name) VALUES (?,?)', [badgeid,name])
     db.commit()
@@ -195,7 +195,10 @@ def show_hiscores():
     numleaderboard = db.execute("SELECT COUNT(*) FROM scoreboard LIMIT 15").fetchone()[0]
     return render_template('hiscores.html',data=list(gameData), scoreboard=scoreboard, numleaderboard=numleaderboard)
 
-if __name__ == '__main__':
+def main():
     global updated
     updated=False
     app.run(host= '0.0.0.0')
+
+if __name__ == '__main__':
+    main()
