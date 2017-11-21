@@ -46,7 +46,10 @@ def get_db():
     return g.sqlite_db
 
 def init_db():
-    copy(app.config['DATABASE'],app.config['DATABASE'][:-3]+strftime('-%Y%m%d-%H%M%S')+'.db')
+    try:
+        copy(app.config['DATABASE'],app.config['DATABASE'][:-3]+strftime('-%Y%m%d-%H%M%S')+'.db')
+    except FileNotFoundError:
+        print('old db not found, not backing up')
     db = get_db()
     with open(os.path.join(app.root_path, 'baseschema.sql'),'r') as schema:
         db.executescript(schema.read())
@@ -59,7 +62,9 @@ def init_db():
     db.commit()
 
 def populate_db():
-    names = ['Arlene','Bret','Cindy','Don','Emily','Franklin','Gert','Harvey','Irma','Jose','Katia','Lee','Maria','Nate','Ophelia','Philippe','Rina','Sean','Tammy','Vince','Whitney']
+    names = ['Arlene','Bret','Cindy','Don','Emily','Franklin','Gert',
+            'Harvey','Irma','Jose','Katia','Lee','Maria','Nate','Ophelia',
+            'Philippe','Rina','Sean','Tammy','Vince','Whitney']
     gameNames = [g[1] for g in app.config['GAMES']]
 
     db = get_db()
@@ -70,6 +75,8 @@ def populate_db():
         score = int(randint(20,500)*(1+badgeid*.1))*100
         db.execute('INSERT INTO submissions (badgeid, name, game, score, staffname) VALUES (?,?,?,?,?)',
             [badgeid, name, game, score, 'BOT'])
+        print(badgeid, name)
+        db.execute('DELETE FROM players WHERE badgeid = ?', [badgeid])
         db.execute('INSERT INTO players (badgeid, name) VALUES (?,?)', [badgeid,name])
     db.commit()
 
@@ -79,8 +86,8 @@ def initdb_command():
     """Initializes the database."""
     init_db()
     populate_db()
-    print('Initialized the database.')
-    return('Initialized the database.')
+    print('Initialized the database with fake scores.')
+    return('Initialized the database with fake scores.')
 
 @app.cli.command('wipedb')
 #@app.route('/wipedb-9000')
