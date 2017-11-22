@@ -1,6 +1,7 @@
 # all the imports
 import os
 import sqlite3
+import time
 from flask import Flask, request, session, g, redirect, \
     url_for, abort, render_template, flash
 from wtforms import Form, StringField, IntegerField, \
@@ -20,7 +21,8 @@ app.config.update(dict(
         ('ghosts', "Ghosts 'n Goblins"),
         ('pengo', 'Pengo'),
         ('pinball', "Pinball"),
-        ('skeeball', "Skee-Ball")
+        ('skeeball', "Skee-Ball"),
+        ('polybius', "Polybius"),
     ]
 ))
 
@@ -45,6 +47,12 @@ def get_db():
         g.sqlite_db = connect_db()
     return g.sqlite_db
 
+@app.teardown_appcontext
+def close_db(error):
+    """Closes the database again at the end of the request."""
+    if hasattr(g, 'sqlite_db'):
+        g.sqlite_db.close()
+
 def init_db():
     try:
         copy(app.config['DATABASE'],app.config['DATABASE'][:-3]+strftime('-%Y%m%d-%H%M%S')+'.db')
@@ -58,7 +66,18 @@ def init_db():
         for g,n in app.config['GAMES']:
             db.executescript(sch.format(g,n))
     with open(os.path.join(app.root_path, 'scoreboardschema.sql'),'r') as schema:
-        db.executescript(schema.read())
+        sch = schema.read()
+        game_rp_as_game = '' 
+        coalesce_game_rp_0 = '0'
+        left_outer_join = ''
+        for g,n in app.config['GAMES']:
+            game_rp_as_game = game_rp_as_game + '{0}.rp as {0},'.format(g)
+            coalesce_game_rp_0 = coalesce_game_rp_0 + ' + coalesce({}.rp,0)'.format(g)
+            left_outer_join = left_outer_join + 'left outer join {0} on players.badgeid = {0}.badgeid '.format(g)
+        db.executescript(sch.format(game_rp_as_game=game_rp_as_game,
+                                    coalesce_game_rp_0=coalesce_game_rp_0,
+                                    left_outer_join=left_outer_join))
+    db.execute('INSERT INTO status VALUES ("update_time",?)', [time.time()])
     db.commit()
 
 def populate_db():
@@ -68,10 +87,10 @@ def populate_db():
     gameNames = [g[1] for g in app.config['GAMES']]
 
     db = get_db()
-    for i in range(25):
+    for i in range(250):
         badgeid = randint(1,21)
         name = names[badgeid-1]
-        game = gameNames[randint(0,4)]
+        game = gameNames[randint(0,len(gameNames)-1)]
         score = int(randint(20,500)*(1+badgeid*.1))*100
         db.execute('INSERT INTO submissions (badgeid, name, game, score, staffname) VALUES (?,?,?,?,?)',
             [badgeid, name, game, score, 'BOT'])
@@ -81,7 +100,7 @@ def populate_db():
     db.commit()
 
 @app.cli.command('initdb')
-#@app.route('/initdb-9000')
+@app.route('/initdb-9000')
 def initdb_command():
     """Initializes the database."""
     init_db()
@@ -90,18 +109,12 @@ def initdb_command():
     return('Initialized the database with fake scores.')
 
 @app.cli.command('wipedb')
-#@app.route('/wipedb-9000')
+@app.route('/wipedb-9000')
 def wipedb_command():
     """Initializes the database."""
     init_db()
     print('Wiped the database.')
     return('Wiped the database.')
-
-@app.teardown_appcontext
-def close_db(error):
-    """Closes the database again at the end of the request."""
-    if hasattr(g, 'sqlite_db'):
-        g.sqlite_db.close()
 
 @app.route('/')
 def hello():
@@ -121,17 +134,19 @@ def submit():
             [badgeid, name, game, score, staffname])
         db.execute('DELETE FROM players WHERE badgeid = ?', [badgeid])
         db.execute('INSERT INTO players (badgeid, name) VALUES (?,?)', [badgeid,name])
+        db.execute('UPDATE status SET value = ? WHERE key = "update_time"', [time.time()])
         db.commit()
         flash('Submission successful!')
-        global updated
-        updated = True
         return redirect(url_for('submit'))
     else:
         return render_template('submission_form.html',form=submitForm)
 
 @app.route('/getname', methods=['POST'])
 def getname():
-    badgeid = int(request.form['badgeid'])
+    try:
+        badgeid = int(request.form['badgeid'])
+    except ValueError:
+        return ''
     print(badgeid)
     db = get_db()
     name = db.execute("SELECT name FROM players WHERE badgeid=?",(badgeid,)).fetchone()
@@ -155,7 +170,6 @@ def view_submissions():
                 'VALUES (?,?,?,?,?,?)',data[1:])
             db.execute('DELETE FROM submissions WHERE subid=?',(subid,))
             db.commit()
-            updated = True
         return redirect(url_for('view_submissions'))
     else:
         db = get_db()
@@ -170,12 +184,9 @@ def view_removed():
 
 @app.route('/update')
 def check_update():
-    global updated
-    if updated:
-        updated = False
-        return 'update'
-    else:
-        return 'nope'
+    db = get_db()
+    update_time = db.execute('SELECT value FROM status WHERE key="update_time"').fetchone()[0]
+    return str(update_time)
 
 @app.route('/hiscores')
 def show_hiscores():
@@ -193,12 +204,11 @@ def show_hiscores():
     scoreboard = db.execute("SELECT name,{},total FROM scoreboard LIMIT 15".format(gameList))
     #scoreboard = db.execute("SELECT name,total FROM scoreboard LIMIT 15")
     numleaderboard = db.execute("SELECT COUNT(*) FROM scoreboard LIMIT 15").fetchone()[0]
-    return render_template('hiscores.html',data=list(gameData), scoreboard=scoreboard, numleaderboard=numleaderboard)
+    update_time = db.execute('SELECT value FROM status WHERE key="update_time"').fetchone()[0]
+    return render_template('hiscores.html',data=list(gameData), scoreboard=scoreboard, numleaderboard=numleaderboard, update_time=update_time)
 
 def main():
-    global updated
-    updated=False
-    app.run(host= '0.0.0.0')
+    app.run(host='0.0.0.0', port=80, debug=True)
 
 if __name__ == '__main__':
     main()

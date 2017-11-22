@@ -6,16 +6,23 @@ function updateStatusThisIsDumb(){
     $.ajax({
         url: 'update',
         timeout: 2000,
-        success: function(rawdata){
-        	if (rawdata == 'update'){location.reload(true);}
+        success: function(new_update){
+        	if (parseFloat(new_update) > update_time){
+                location.reload(true);
+                console.log('score updated')
+            }else{console.log('no update');}
         }
     });
+    //test for fading in/out for changing what is shown
+    //$(".game").fadeOut(1000);
+    //$(".game").fadeIn(1000);
 };
 
 function updateStatus(){location.reload(true);}
 
 $(document).ready(function(){
     setInterval(updateStatusThisIsDumb,5000);
+    update_time = {{ update_time }};
 });
 </script>
 
@@ -75,9 +82,9 @@ table{
 		<table class="gametitle"><tr><td class="gametitle">{{ gamedata[0].upper() }}</td></tr></table>
 		<table class="gametable">
 		    <tr>
-		        <th width=10%>Rank</th>
-		        <th>Name</th>
-		        <th>Score</th>
+		        <th width=15%>Rank</th>
+		        <th width=42%>Name</th>
+		        <th width=33%>Score</th>
 		        <th width=10%>RP</th>
 		    </tr>
 		    {% for score in gamedata[1] %}

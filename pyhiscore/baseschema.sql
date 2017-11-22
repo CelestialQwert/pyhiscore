@@ -1,3 +1,9 @@
+drop table if exists status;
+create table status (
+  key text not null,
+  value int not null
+);
+
 drop table if exists submissions;
 create table submissions (
   subid integer primary key autoincrement,
