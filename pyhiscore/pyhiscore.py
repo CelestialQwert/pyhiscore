@@ -149,8 +149,9 @@ def getname():
         return ''
     print(badgeid)
     db = get_db()
-    name = db.execute("SELECT name FROM players WHERE badgeid=?",(badgeid,)).fetchone()
+    name = db.execute("SELECT name FROM players WHERE badgeid=?",(badgeid,)).fetchone()[0]
     if name:
+        print(name)
         return name
     else:
         return ''
