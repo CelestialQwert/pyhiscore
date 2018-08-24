@@ -120,6 +120,10 @@ def wipedb_command():
 def hello():
     return 'Welcome to the high score tracker!'
 
+@app.route('/resize_test')
+def resize_test():
+    return render_template('resize_test.html')
+
 @app.route('/submit',methods=['GET','POST'])
 def submit():
     submitForm = SubmitForm(request.form)
