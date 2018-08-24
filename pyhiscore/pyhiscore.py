@@ -153,10 +153,10 @@ def getname():
         return ''
     print(badgeid)
     db = get_db()
-    name = db.execute("SELECT name FROM players WHERE badgeid=?",(badgeid,)).fetchone()[0]
+    name = db.execute("SELECT name FROM players WHERE badgeid=?",(badgeid,)).fetchone()
     if name:
         print(name)
-        return name
+        return name[0]
     else:
         return ''
 

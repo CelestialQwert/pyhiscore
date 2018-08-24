@@ -36,13 +36,13 @@
           
         }
 
-        $(document).ready( function(){
+        $(document).ready(function(){
             setInterval(updateStatus,5000);
             update_time = {{ update_time }};
 
             $(window).resize(doWindowResize);
             doWindowResize();
-        })
+        });
     </script>
 
 
@@ -66,9 +66,10 @@
             padding: 1px;
         }
 
-        .game{width: 20%; float:left;}
-        .leaderboard{float:right; width:40%;}
-        .scoreboard{width: 12%;}
+        .title{float:left; width: 67%; font-size: 24pt; font-family:bricks; text-align:center;}
+        .game{width: 21%; float:left;}
+        .leaderboard{float:right; width:37%;}
+        .scoreboard{width: 14.5%;}
         .gametitle{border: 0px; font-family:bricks;height:37px; text-align: center;width:90%;font-size: 11pt;}
         .gametable{width: 95%;}
         .leadertable{width: 99%;}
@@ -128,8 +129,8 @@
                 <table class="gametable">
                     <tr>
                         <th width=15%>Rank</th>
-                        <th width=50%>Name</th>
-                        <th width=25%>Score</th>
+                        <th width=42%>Name</th>
+                        <th width=33%>Score</th>
                         <th width=10%>RP</th>
                     </tr>
                     {% for score in gamedata[1] %}
