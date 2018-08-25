@@ -21,7 +21,7 @@
 
         function forceUpdateStatus(){location.reload(true);}
 
-        function doWindowResize() {
+        function doWindowResizeDont() {
           
           var scale;
             
@@ -37,7 +37,7 @@
         }
 
         $(document).ready( function(){
-            setInterval(updateStatus,5000);
+            // setInterval(updateStatus,5000);
             update_time = {{ update_time }};
 
             $(window).resize(doWindowResize);
@@ -56,7 +56,7 @@
 
         h2 {font-family:bricks; font-size: 28px;}
 
-        td, th, table{
+        td, th{
             border: 1px solid #0000ff;
             padding: 3px;
             vertical-align: bottom;
@@ -66,9 +66,16 @@
             padding: 1px;
         }
 
-        .game{width: 20%; float:left;}
-        .leaderboard{float:right; width:40%;}
-        .scoreboard{width: 12%;}
+        th{border: 1px solid white;}
+        .rank1{border: 1px solid magenta;}
+        .rank2{border: 1px solid red;}
+        .rank3{border: 1px solid orange;}
+        .rank4{border: 1px solid yellow;}
+        .rank5{border: 1px solid green;}
+
+        .game{width: 19%; float:left;}
+        .leaderboard{float:right; width:43%;}
+        .scoreboard{width: 11.5%;}
         .gametitle{border: 0px; font-family:bricks;height:37px; text-align: center;width:90%;font-size: 11pt;}
         .gametable{width: 95%;}
         .leadertable{width: 99%;}
@@ -106,17 +113,17 @@
                     {% for gamedata in data %}
                         <th class="scoreboard">{{ gamedata[0] }}</th>
                     {% endfor %}
-                    <th width="25px">Total</th>
+                    <th width=7%>Total</th>
                 </tr>
-                {% for game in scoreboard %}
+                {% for person in scoreboard %}
                     <tr>
-                    {% for item in game %}
-                        <td>{% if item %}{{ item }}{% endif %}</td>
+                    {% for item in person[1:] %}
+                        <td class="rank{{person[0]}}">{% if item %}{{ item }}{% endif %}</td>
                     {% endfor %}
                     </tr>
                 {% endfor %}
                 {% for i in range(numleaderboard+1,16) %}
-                    <tr><td>--</td><td></td><td></td><td></td><td></td><td></td><td>0</td></tr>
+                    <tr><td>--</td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td></tr>
                 {% endfor %}
             </table>
             <p class="footer">SUBMIT YOUR SCORES TO THE ARCADE HELP DESK!<br><br>SCORING ENDS 11:59 PM SATURDAY</p>
@@ -127,15 +134,14 @@
                 <table class="gametitle"><tr><td class="gametitle">{{ gamedata[0].upper() }}</td></tr></table>
                 <table class="gametable">
                     <tr>
-                        <th width=15%>Rank</th>
-                        <th width=50%>Name</th>
-                        <th width=25%>Score</th>
+                        <th width=55%>Name</th>
+                        <th width=35%>Score</th>
                         <th width=10%>RP</th>
                     </tr>
                     {% for score in gamedata[1] %}
                         <tr>
-                        {% for item in score %}
-                            <td>{{ item }}</td>
+                        {% for item in score[1:] %}
+                            <td class="rank{{score[0]}}">{{ item }}</td>
                         {% endfor %}
                         </tr>
                     {% endfor %}

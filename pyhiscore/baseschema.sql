@@ -42,12 +42,12 @@ create table players (
   unique(badgeid)
 );
 
-drop table if exists rp;
-create table rp (
-    rank int,
-    rp int);
+drop table if exists rp_list;
+create table rp_list (
+    rank integer,
+    rp integer);
 
-insert into rp values
+insert into rp_list values
     (1,15),
     (2,12),
     (3,10),
@@ -58,3 +58,38 @@ insert into rp values
     (8,3),
     (9,2),
     (10,1);
+
+drop view if exists game_ranking;
+create view game_ranking as select
+    subid,score,game,badgeid,
+    (
+        select count(*)+1
+        from hiscore as hi2
+        where hi2.score > hi1.score
+        and hi2.game = hi1.game
+    ) as rank
+    from hiscore as hi1 
+    order by game asc, score desc;
+    
+drop view if exists game_rp;
+create view game_rp as 
+    select game_ranking.*, rp 
+    from rp_list inner join game_ranking on rp_list.rank = game_ranking.rank
+    order by game asc, score desc;
+
+drop view if exists total_rp;
+create view total_rp as 
+    select players.badgeid as badgeid, players.name as name, sum(rp) as total_rp
+    from game_rp inner join players on players.badgeid = game_rp.badgeid
+    group by players.badgeid
+    order by total_rp desc;
+
+drop view if exists total_ranking;
+create view total_ranking as select
+    (
+        select count(*)+1
+        from total_rp as t2
+        where t2.total_rp > t1.total_rp
+    ) as rank, t1.*
+    from total_rp as t1
+    order by rank;

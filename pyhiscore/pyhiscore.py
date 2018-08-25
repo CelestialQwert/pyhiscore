@@ -6,7 +6,7 @@ from flask import Flask, request, session, g, redirect, \
     url_for, abort, render_template, flash
 from wtforms import Form, StringField, IntegerField, \
     SelectField, validators
-from random import randint
+from random import randint, choice
 from shutil import copy
 from time import strftime
 
@@ -72,11 +72,14 @@ def init_db():
         left_outer_join = ''
         for g,n in app.config['GAMES']:
             game_rp_as_game = game_rp_as_game + '{0}.rp as {0},'.format(g)
-            coalesce_game_rp_0 = coalesce_game_rp_0 + ' + coalesce({}.rp,0)'.format(g)
+            coalesce_game_rp_0 = coalesce_game_rp_0 + ' + case when {0}.rp is not null then {0}.rp else 0 end'.format(g)
             left_outer_join = left_outer_join + 'left outer join {0} on players.badgeid = {0}.badgeid '.format(g)
-        db.executescript(sch.format(game_rp_as_game=game_rp_as_game,
+        sch_command = sch.format(game_rp_as_game=game_rp_as_game,
                                     coalesce_game_rp_0=coalesce_game_rp_0,
-                                    left_outer_join=left_outer_join))
+                                    left_outer_join=left_outer_join)
+        print(sch_command)
+        db.executescript(sch_command)
+        
     db.execute('INSERT INTO status VALUES ("update_time",?)', [time.time()])
     db.commit()
 
@@ -87,10 +90,10 @@ def populate_db():
     gameNames = [g[1] for g in app.config['GAMES']]
 
     db = get_db()
-    for i in range(250):
+    for i in range(50):
         badgeid = randint(1,21)
         name = names[badgeid-1]
-        game = gameNames[randint(0,len(gameNames)-1)]
+        game = choice(gameNames)
         score = int(randint(20,500)*(1+badgeid*.1))*100
         db.execute('INSERT INTO submissions (badgeid, name, game, score, staffname) VALUES (?,?,?,?,?)',
             [badgeid, name, game, score, 'BOT'])
@@ -206,7 +209,7 @@ def show_hiscores():
         numentries.append(db.execute("SELECT COUNT(*) FROM {} LIMIT 10".format(view)).fetchone()[0])
     gameData = zip(gameTitles,hiScoreData,numentries)
     gameList = ','.join(views)
-    scoreboard = db.execute("SELECT name,{},total FROM scoreboard LIMIT 15".format(gameList))
+    scoreboard = db.execute("SELECT rank,name,{},total FROM scoreboard LIMIT 15".format(gameList))
     #scoreboard = db.execute("SELECT name,total FROM scoreboard LIMIT 15")
     numleaderboard = db.execute("SELECT COUNT(*) FROM scoreboard LIMIT 15").fetchone()[0]
     update_time = db.execute('SELECT value FROM status WHERE key="update_time"').fetchone()[0]
