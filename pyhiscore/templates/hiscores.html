@@ -21,7 +21,7 @@
 
         function forceUpdateStatus(){location.reload(true);}
 
-        function doWindowResizeDont() {
+        function doWindowResize() {
           
           var scale;
             
@@ -72,11 +72,16 @@
         .rank3{border: 1px solid orange;}
         .rank4{border: 1px solid yellow;}
         .rank5{border: 1px solid green;}
+        /*.rank6{border: 1px solid #80ff00;}
+        .rank7{border: 1px solid #00ff00;}
+        .rank8{border: 1px solid turquoise;}
+        .rank9{border: 1px solid blue;}
+        .rank10{border: 1px solid purple;}*/
 
         .game{width: 19%; float:left;}
         .leaderboard{float:right; width:43%;}
-        .scoreboard{width: 11.5%;}
-        .gametitle{border: 0px; font-family:bricks;height:37px; text-align: center;width:90%;font-size: 11pt;}
+        .scoreboard{width: 13.5%;}
+        .gametitle{border: 0px; font-family:bricks;height:37px; text-align: center;font-size: 11pt;}
         .gametable{width: 95%;}
         .leadertable{width: 99%;}
         .footer{font-family:bricks;font-size: 12pt;text-align: center}
@@ -93,11 +98,6 @@
           transform: translate(-50%, -50%);
         }
 
-        .bigred {
-          color: red;
-          font-size: 5rem;
-        }
-
     </style>
 </head>
 
@@ -109,6 +109,7 @@
         <div class="leaderboard"><h2 align="center">KING OF CADES<br>LEADERBOARD</h2>
             <table class="leadertable">
                 <tr>
+                    <th width=1%>#</th>
                     <th>Name</th>
                     {% for gamedata in data %}
                         <th class="scoreboard">{{ gamedata[0] }}</th>
@@ -117,7 +118,7 @@
                 </tr>
                 {% for person in scoreboard %}
                     <tr>
-                    {% for item in person[1:] %}
+                    {% for item in person %}
                         <td class="rank{{person[0]}}">{% if item %}{{ item }}{% endif %}</td>
                     {% endfor %}
                     </tr>
@@ -131,22 +132,23 @@
 
         {% for gamedata in data %}
             <div class="game">
-                <table class="gametitle"><tr><td class="gametitle">{{ gamedata[0].upper() }}</td></tr></table>
+                <span class="gametitle"><br/>{{ gamedata[0].upper() }}</span>
                 <table class="gametable">
                     <tr>
-                        <th width=55%>Name</th>
-                        <th width=35%>Score</th>
+                        <th width=10%>#</th>
+                        <th width=52%>Name</th>
+                        <th width=32%>Score</th>
                         <th width=10%>RP</th>
                     </tr>
                     {% for score in gamedata[1] %}
                         <tr>
-                        {% for item in score[1:] %}
+                        {% for item in score %}
                             <td class="rank{{score[0]}}">{{ item }}</td>
                         {% endfor %}
                         </tr>
                     {% endfor %}
                     {% for i in range(gamedata[2]+1,11) %}
-                    <tr><td>{{ i }}</td><td>--</td><td>--</td><td>--</td></tr>
+                    <tr><td class="rank{{ i }}">{{ i }}</td><td class="rank{{ i }}">--</td><td class="rank{{ i }}">--</td><td class="rank{{ i }}">--</td></tr>
                     {% endfor %}
                 </table>
                 <br />

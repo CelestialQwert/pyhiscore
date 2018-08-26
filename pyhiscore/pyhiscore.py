@@ -17,12 +17,11 @@ app.config.update(dict(
     SECRET_KEY='Sunny is a very nice kitty.',
     DEBUG = True,
     GAMES = [ #sql table name, full name
-        ('galaga', "Galaga"),
-        ('ghosts', "Ghosts 'n Goblins"),
-        ('pengo', 'Pengo'),
-        ('pinball', "Pinball"),
+        ('ghostbusters', "Ghostbusters"),
+        ('joust', 'Joust'),
+        ('popeye', "Popeye"),
         ('skeeball', "Skee-Ball"),
-        ('polybius', "Polybius"),
+        ('tempest','Tempest')
     ]
 ))
 
@@ -64,19 +63,16 @@ def init_db():
     with open(os.path.join(app.root_path, 'gameschema.sql'),'r') as schema:
         sch = schema.read()  
         for g,n in app.config['GAMES']:
+            print(sch.format(g,n))
             db.executescript(sch.format(g,n))
     with open(os.path.join(app.root_path, 'scoreboardschema.sql'),'r') as schema:
         sch = schema.read()
         game_rp_as_game = '' 
-        coalesce_game_rp_0 = '0'
         left_outer_join = ''
         for g,n in app.config['GAMES']:
             game_rp_as_game = game_rp_as_game + '{0}.rp as {0},'.format(g)
-            coalesce_game_rp_0 = coalesce_game_rp_0 + ' + case when {0}.rp is not null then {0}.rp else 0 end'.format(g)
             left_outer_join = left_outer_join + 'left outer join {0} on players.badgeid = {0}.badgeid '.format(g)
-        sch_command = sch.format(game_rp_as_game=game_rp_as_game,
-                                    coalesce_game_rp_0=coalesce_game_rp_0,
-                                    left_outer_join=left_outer_join)
+        sch_command = sch.format(game_rp_as_game=game_rp_as_game,left_outer_join=left_outer_join)
         print(sch_command)
         db.executescript(sch_command)
         
@@ -90,7 +86,7 @@ def populate_db():
     gameNames = [g[1] for g in app.config['GAMES']]
 
     db = get_db()
-    for i in range(50):
+    for i in range(150):
         badgeid = randint(1,21)
         name = names[badgeid-1]
         game = choice(gameNames)
@@ -209,7 +205,7 @@ def show_hiscores():
         numentries.append(db.execute("SELECT COUNT(*) FROM {} LIMIT 10".format(view)).fetchone()[0])
     gameData = zip(gameTitles,hiScoreData,numentries)
     gameList = ','.join(views)
-    scoreboard = db.execute("SELECT rank,name,{},total FROM scoreboard LIMIT 15".format(gameList))
+    scoreboard = db.execute("SELECT rank,name,{},total_rp FROM scoreboard WHERE rank IS NOT null LIMIT 15".format(gameList))
     #scoreboard = db.execute("SELECT name,total FROM scoreboard LIMIT 15")
     numleaderboard = db.execute("SELECT COUNT(*) FROM scoreboard LIMIT 15").fetchone()[0]
     update_time = db.execute('SELECT value FROM status WHERE key="update_time"').fetchone()[0]
