@@ -2,67 +2,64 @@
 <html lang="en" >
 
 <head>
-  <meta charset="UTF-8">
-  <title>Resize with Scale</title>
-  <script type=text/javascript src='{{ url_for('static', filename='jquery.js') }}'></script>
-  <style type="text/css">
-    body {
-      background: #ccc;
-    }
+    <meta charset="UTF-8">
+    <title>Resize with Scale</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
-    .scaling-box {
-      width: 1280px;
-      height: 720px;
-      text-align: center;
-      background: white;
-      margin: 0;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-    }
+    <script>
+        function doWindowResize() {
+          
+          var scale;
+            
+          scale = Math.min(
+            $(window).width() / 640,    
+            $(window).height() / 360
+          );
+          
+          $("#scaling-box").css({
+            transform: "translate(-50%, -50%) " + "scale(" + scale + ")"
+          });
+          
+        }
 
-    .bigred {
-      color: red;
-      font-size: 5rem;
-    }
+        $(document).ready( function(){
+            $(window).resize(doWindowResize);
+            doWindowResize();
+        })
+    </script>
 
-  </style>
+    <style type="text/css">
+        body {
+            background: #ccc;
+        }
+
+        .scaling-box {
+            width: 640px;
+            height: 360px;
+            text-align: center;
+            background: white;
+            margin: 0;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .bigred {
+            color: red;
+            font-size: 5rem;
+        }
+
+    </style>
 </head>
 
 <body>
-  <div class="scaling-box" id="scaling-box">
-      <h1>I am designed just so.</h1>
-      <p>My design is intentional. I want to be scaled in such a way that scales the design. No reflows or anything, just straight up scaling. Kinda like SVG.</p>
-      <img src="skull-and-crossbones.svg" alt="" /><br />
-      <span class="bigred"> ✖ ✖ ✖</span>
-  </div>
-
-  <script type="text/javascript">
-    
-    var $el = $("#scaling-box");
-    var elHeight = $el.outerHeight();
-    var elWidth = $el.outerWidth();
-
-    $(window).resize(doWindowResize);
-
-    function doWindowResize() {
-      
-      var scale, origin;
-        
-      scale = Math.min(
-        $(window).width() / elWidth,    
-        $(window).height() / elHeight
-      );
-      
-      $el.css({
-        transform: "translate(-50%, -50%) " + "scale(" + scale + ")"
-      });
-      
-    }
-
-    $(document).ready(doWindowResize());
-  </script>
+    <div class="scaling-box" id="scaling-box">
+            <h1>I am designed just so.</h1>
+            <p>My design is intentional. I want to be scaled in such a way that scales the design. No reflows or anything, just straight up scaling. Kinda like SVG.</p>
+            <img src="skull-and-crossbones.svg" alt="" /><br />
+            <span class="bigred"> ✖ ✖ ✖</span>
+    </div>
 </body>
 
 

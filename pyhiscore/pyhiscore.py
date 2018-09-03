@@ -2,8 +2,9 @@
 import os
 import sqlite3
 import time
+import json
 from flask import Flask, request, session, g, redirect, \
-    url_for, abort, render_template, flash
+    url_for, abort, render_template, flash, Response
 from wtforms import Form, StringField, IntegerField, \
     SelectField, validators
 from random import randint, choice
@@ -21,7 +22,10 @@ app.config.update(dict(
         ('joust', 'Joust'),
         ('popeye', "Popeye"),
         ('skeeball', "Skee-Ball"),
-        ('tempest','Tempest')
+        ('tempest','Tempest'),
+        ('xtra','Xtra!'),
+        ('yaris','Yaris'),
+        ('zaxxon','Zaxxon')
     ]
 ))
 
@@ -73,7 +77,7 @@ def init_db():
             game_rp_as_game = game_rp_as_game + '{0}.rp as {0},'.format(g)
             left_outer_join = left_outer_join + 'left outer join {0} on players.badgeid = {0}.badgeid '.format(g)
         sch_command = sch.format(game_rp_as_game=game_rp_as_game,left_outer_join=left_outer_join)
-        print(sch_command)
+        #print(sch_command)
         db.executescript(sch_command)
         
     db.execute('INSERT INTO status VALUES ("update_time",?)', [time.time()])
@@ -81,13 +85,13 @@ def init_db():
 
 def populate_db():
     names = ['Arlene','Bret','Cindy','Don','Emily','Franklin','Gert',
-            'Harvey','Irma','Jose','Katia','Lee','Maria','Nate','Ophelia',
-            'Philippe','Rina','Sean','Tammy','Vince','Whitney']
+            'Harvey','Irma','Jose','Katia','Lee','Maria']#,'Nate','Ophelia',
+            #'Philippe','Rina','Sean','Tammy','Vince','Whitney']
     gameNames = [g[1] for g in app.config['GAMES']]
 
     db = get_db()
     for i in range(150):
-        badgeid = randint(1,21)
+        badgeid = randint(1,len(names)-1)
         name = names[badgeid-1]
         game = choice(gameNames)
         score = int(randint(20,500)*(1+badgeid*.1))*100
@@ -118,10 +122,6 @@ def wipedb_command():
 @app.route('/')
 def hello():
     return 'Welcome to the high score tracker!'
-
-@app.route('/resize_test')
-def resize_test():
-    return render_template('resize_test.html')
 
 @app.route('/submit',methods=['GET','POST'])
 def submit():
@@ -173,6 +173,7 @@ def view_submissions():
             db.execute('INSERT INTO removed (subtime,badgeid, name, game, score, staffname)'+
                 'VALUES (?,?,?,?,?,?)',data[1:])
             db.execute('DELETE FROM submissions WHERE subid=?',(subid,))
+            db.execute('UPDATE status SET value = ? WHERE key = "update_time"', [time.time()])
             db.commit()
         return redirect(url_for('view_submissions'))
     else:
@@ -206,10 +207,50 @@ def show_hiscores():
     gameData = zip(gameTitles,hiScoreData,numentries)
     gameList = ','.join(views)
     scoreboard = db.execute("SELECT rank,name,{},total_rp FROM scoreboard WHERE rank IS NOT null LIMIT 15".format(gameList))
-    #scoreboard = db.execute("SELECT name,total FROM scoreboard LIMIT 15")
     numleaderboard = db.execute("SELECT COUNT(*) FROM scoreboard LIMIT 15").fetchone()[0]
     update_time = db.execute('SELECT value FROM status WHERE key="update_time"').fetchone()[0]
     return render_template('hiscores.html',data=list(gameData), scoreboard=scoreboard, numleaderboard=numleaderboard, update_time=update_time)
+
+@app.route('/get_hi_scores')
+def get_high_scores():
+    db = get_db()
+    score_json = {'games': dict()}
+    for game in app.config['GAMES']:
+        game_id = game[0]
+        game_name = game[1]
+        game_data = db.execute("SELECT rank,name,score,rp FROM {} LIMIT 10".format(game_id)).fetchall()
+        score_dicts = [dict(zip(['rank','name','score','rp'],row)) for row in game_data]
+        game_dict = {
+            'name': game_name,
+            'scores': score_dicts,
+            'num_scores': len(game_data)
+        }
+        score_json['games'][game_id] = game_dict
+
+    game_id_list = [g[0] for g in app.config['GAMES']]
+    game_name_list = [g[1] for g in app.config['GAMES']]
+    game_name_dict = dict(zip(game_id_list,game_name_list))
+    score_json['game_list'] = game_name_dict
+    game_str_list = ','.join(game_id_list)
+    leaderboard = db.execute("SELECT rank,name,total_rp,{} FROM scoreboard WHERE rank IS NOT null LIMIT 15".format(game_str_list)).fetchall()
+    cols = ['rank','name','total_rp'] + game_id_list
+    leader_dict = [dict(zip(cols,row)) for row in leaderboard]
+    score_json['leaderboard'] = leader_dict
+    score_json['num_leaderboard'] = len(leaderboard)
+    score_json['num_games'] = len(app.config['GAMES'])
+
+    update_time = db.execute('SELECT value FROM status WHERE key="update_time"').fetchone()[0]
+    score_json['update_time'] = update_time
+
+    return Response(json.dumps(score_json),mimetype='application/json')
+
+@app.route('/leaderboard_scroll')
+def leaderboard_scroll():
+    return render_template('leaderboard_scroll.html',game_list = app.config['GAMES'])
+
+@app.route('/leaderboard')
+def leaderboard():
+    return render_template('leaderboard.html',game_list = app.config['GAMES'])
 
 def main():
     app.run(host='0.0.0.0', port=80, debug=True)

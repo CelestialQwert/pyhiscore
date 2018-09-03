@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Leaderboard</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+    <script>
+
+        function check_update(){
+            $.ajax({
+                url: 'update',
+                timeout: 2000,
+                success: function(new_update){
+                    if (parseFloat(new_update) > update_time){
+                        update_scores();
+                        console.log('score updated')
+                    }else{console.log('no update');}
+                }
+            });
+            //test for fading in/out for changing what is shown
+            // $(".game").fadeOut(1000);
+            // $(".game").fadeIn(1000);
+        };
+
+        function window_resize() {
+          
+          var scale;
+            
+          scale = Math.min(
+            $(window).width() / true_width,    
+            $(window).height() / true_height
+          );
+          
+          $(".wrapper").css({
+            transform: "translate(-50%, -50%) " + "scale(" + scale + ")"
+          });
+          
+        }
+
+        function update_scores() {
+
+            $.ajax({
+                url: 'get_hi_scores',
+                type: 'GET',
+                timeout: 2000,
+                success: function(data){
+
+                    update_time = data.update_time;
+
+                    $.each(data.games, function(game_id, game_data){
+                        $('.tablewrap.'+game_id).html(
+                            $('<table>').addClass('table_'+game_id).append(
+                                $('<tr>').append(
+                                    $('<th>').text('#'),
+                                    $('<th>').text('Name'),
+                                    $('<th>').text('Score'),
+                                    $('<th>').text('RP')
+                                )
+                            )
+                        );
+                        $.each(game_data.scores, function(index,item){
+                            $('.table_'+game_id).append(
+                                $('<tr>').append(
+                                    $('<td>').addClass('rank').addClass('rank'+(item.rank)).text(item.rank),
+                                    $('<td>').addClass('name').addClass('rank'+(item.rank)).text(item.name),
+                                    $('<td>').addClass('score').addClass('rank'+(item.rank)).text(item.score),
+                                    $('<td>').addClass('rp').addClass('rank'+(item.rank)).text(item.rp)
+                                )
+                            );
+                        });
+                        $.each(Array(10 - game_data.num_scores), function(i,d){
+                            $('.table_'+game_id).append(
+                                $('<tr>').append(
+                                    $('<td>').addClass('empty').text('--'),
+                                    $('<td>').addClass('empty').text('--'),
+                                    $('<td>').addClass('empty').text('--'),
+                                    $('<td>').addClass('empty').text('--')
+                                )
+                            );
+                        });
+                        //$('.'+game_id).text(JSON.stringify(game_data));
+                    });
+
+                    $('.tablewrap.leaderboard').html(
+                        $('<table>').addClass('table_leaderboard').append(
+                            $('<tr>').addClass('leaderboard_header').append(
+                                $('<th>').text('#'),
+                                $('<th>').text('Name')
+                            )
+                        )
+                    );
+                    $.each(data.game_list, function(game_id,game_name){
+                        $('.leaderboard_header').append(
+                            $('<th>').text(game_name)
+                        )
+                    });
+                    $('.leaderboard_header').append(
+                        $('<th>').text('Total')
+                    );
+
+                    $.each(data.leaderboard, function(index,item){
+                        $('.table_leaderboard').append(
+                            $('<tr>').addClass('row'+(index+1).toString()).append(
+                                $('<td>').addClass('bigrank').addClass('rank'+(item.rank)).text(item.rank),
+                                $('<td>').addClass('bigname').addClass('rank'+(item.rank)).text(item.name)
+                            )
+                        );
+                        $.each(data.game_list, function(game_id,game_name){
+                            var score = item[game_id];
+                            if (score == null) {
+                                $('.row'+(index+1).toString()).append(
+                                    $('<td>').addClass('bigscore').addClass('rank'+(item.rank)).text(' ')
+                                )
+                            } else {
+                                $('.row'+(index+1).toString()).append(
+                                    $('<td>').addClass('bigscore').addClass('rank'+(item.rank)).text(item[game_id].toString())
+                                )
+                            }
+                        });
+                        $('.row'+(index+1).toString()).append(
+                            $('<td>').addClass('bigrp').addClass('rank'+(item.rank)).text(item.total_rp)
+                        )
+                    });
+
+                    $.each(Array(15 - data.num_leaderboard), function(i,d){
+                        $('.table_leaderboard').append(
+                            $('<tr>').addClass('row'+(i+1+data.num_leaderboard).toString()).append(
+                                $('<td>').addClass('empty').text('--')
+                            )
+                        );
+                        $.each(Array(2+data.num_games), function(j,c){
+                            $('.row'+(i+1+data.num_leaderboard).toString()).append(
+                                $('<td>').addClass('empty').text('--')
+                            );
+                        });
+                    });
+
+                },
+                error: function(){console.log('shit broke!');}
+            });
+        }
+
+        $(document).ready( function(){
+            $(window).resize(window_resize);
+            setInterval(check_update,5000);
+
+            update_time = 0
+
+            start_width = Number($('.wrapper').css('width').slice(0,-2));
+            start_height = Number($('.wrapper').css('height').slice(0,-2));
+            start_padding = Number($('.wrapper').css('padding-top').slice(0,-2));
+
+            true_width = start_width + start_padding*2;
+            true_height = start_height + start_padding*2;
+
+            window_resize();
+            check_update();
+        })
+    </script>
+
+
+    <style type="text/css">
+        body {
+          margin: 0px;
+          background-color: gray;
+          font-family: sans-serif;
+        }
+
+        table{
+            font-size: 9pt;
+            width: 100%;
+        }
+
+        td, th{
+            border: 1px solid #0000ff;
+            padding: 3px;
+            vertical-align: bottom;
+        }
+
+        th{border: 1px solid white;}
+
+        @font-face{
+            font-family: bricks;
+            src: url({{ url_for('static', filename='PrStart.ttf') }});
+        }
+
+        .wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 2fr;
+            grid-template-rows: 1fr 1fr;
+            grid-gap: 5px;
+            background-color: black;
+            width: 1270px;
+            height: 710px;
+            padding: 5px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            align-items: center;
+        }
+
+        .box {
+            background-color: black;
+            color: white;
+            padding: 5px;
+        }
+
+        .tablewrap{
+            background-color: black;
+        }
+
+        .leaderboard{
+            grid-column: 4;
+            grid-row: 1 / -1
+        }
+
+        .rank1{border: 1px solid magenta;}
+        .rank2{border: 1px solid red;}
+        .rank3{border: 1px solid orange;}
+        .rank4{border: 1px solid yellow;}
+        .rank5{border: 1px solid green;}
+
+        .rank  {width: 10%; text-align: right;}
+        .name  {width: 55%; text-align: center;}
+        .score {width: 25%; text-align: right;}
+        .rp    {width: 10%; text-align: right;}
+
+        .bigrank  {width: 2.5%; text-align: right;}
+        .bigname  {width: 35%; text-align: center;}
+        .bigscore {width: 12.5%; text-align: center;}
+        .bigrp    {width: 2.5%; text-align: right;}
+
+        .empty {text-align: center;}
+
+        .gametitle{
+            border: 0px;
+            font-family:bricks;
+            text-align: center;
+            font-size: 11pt;
+            padding: 3px;
+        }
+
+        .maintitle {
+            font-family:bricks; 
+            font-size: 28px;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .info{
+            font-family:bricks;
+            font-size: 12pt;
+            text-align: center;
+            padding: 5px;
+            padding-top: 25px;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <div class="wrapper">
+        <div class="box leaderboard">
+            <div class="maintitle">KING OF CADES LEADERBOARD</div>
+            <div class="tablewrap leaderboard">lol</div>
+            <div class="info">
+                SUBMIT YOUR SCORES TO THE ARCADE HELP DESK!<br><br>SCORING ENDS 11:59 PM SATURDAY
+            </div>
+        </div>
+        {% for game in game_list %}
+            <div class="box {{game[0]}}">
+                <div class="gametitle">{{game[1].upper()}}</div>
+                <div class="tablewrap {{game[0]}}">{{game[0]}}</div>
+            </div>
+        {% endfor %}
+    </div>
+
+</body>
+</html>
