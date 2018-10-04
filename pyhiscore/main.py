@@ -105,7 +105,7 @@ def populate_db():
 @app.cli.command('initdb')
 @app.route('/initdb-9000')
 def initdb_command():
-    """Initializes the database."""
+    """Initializes the database and fills with fake scores"""
     init_db()
     populate_db()
     print('Initialized the database with fake scores.')
@@ -114,7 +114,7 @@ def initdb_command():
 @app.cli.command('wipedb')
 @app.route('/wipedb-9000')
 def wipedb_command():
-    """Initializes the database."""
+    """Wipes and initializes the database."""
     init_db()
     print('Wiped the database.')
     return('Wiped the database.')

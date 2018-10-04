@@ -1,1 +1,1 @@
-from .pyhiscore import *
+from .main import * 
