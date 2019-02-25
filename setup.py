@@ -11,4 +11,9 @@ setup(
     install_requires=[
         'flask','wtforms'
     ],
+    entry_points={
+        'console_scripts': [
+            'pyhiscore = pyhiscore.main:main'
+        ]
+    }
 )
